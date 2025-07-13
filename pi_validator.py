@@ -53,10 +53,26 @@ def list_hats() -> List[Dict[str, str]]:
 def check_audio() -> bool:
     """Optional 1-s playback/record smoke-test for WM8960-based HATs.
 
-    Returns False if test fails or codec not present.  Implemented as a stub to
-    avoid extra dependencies; feel free to enhance.
+    Returns False if test fails or codec not present.
     """
-    return False
+    try:
+        # Check for the presence of the WM8960 sound card
+        sound_cards = sh("aplay -l")
+        if "wm8960" not in sound_cards.lower():
+            return False  # Codec not found
+
+        # Perform a 1-second record/playback test
+        test_file = "/tmp/pi_validator_audio_test.wav"
+        record_cmd = f"arecord -d 1 -f S16_LE -r 48000 {test_file} -D hw:CARD=wm8960soundc,DEV=0"
+        play_cmd = f"aplay {test_file} -D hw:CARD=wm8960soundc,DEV=0"
+
+        sh(record_cmd)
+        sh(play_cmd)
+
+        os.remove(test_file)
+        return True
+    except (subprocess.CalledProcessError, FileNotFoundError):
+        return False
 
 
 def upload(result: dict) -> None:
@@ -76,9 +92,9 @@ def main() -> None:
         "hats": list_hats(),
     }
 
-    # Uncomment if you add codec support
-    # if any(h["product"].lower().find("wm8960") >= 0 for h in result["hats"]):
-    #     result["audio_ok"] = check_audio()
+    # If a WM8960 HAT is detected, run the audio check.
+    if any("wm8960" in h["product"].lower() for h in result["hats"]):
+        result["audio_ok"] = check_audio()
 
     j = json.dumps(result, indent=2)
     print(j)
