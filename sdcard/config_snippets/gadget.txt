@@ -1,0 +1,8 @@
+# Lines to opt-in to USB-serial gadget mode
+
+# Append to config.txt
+
+dtoverlay=dwc2,dr_mode=peripheral
+
+# Append IN-PLACE (same line) to cmdline.txt
+# ... rootwait modules-load=dwc2,g_serial

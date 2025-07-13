@@ -1,0 +1,5 @@
+# build artefacts
+usbboot/initramfs.cpio
+modules/
+__pycache__/
+.venv/
